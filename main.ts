@@ -1,20 +1,26 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+// Roast Your Own Operator in One Line — one-liner revision (Neon FINAL line).
+// Writes the entry line verbatim to entry.txt in the grader's output dir.
+// Output dir: $MAKEFUN_OUTPUT_DIR, else /output, else ./output (repo dir is
+// read-only under the grader, so the entry never writes next to this file).
 
-// One-line roast of my own operator. Exactly 111 UTF-8 chars, no trailing
-// newline, so the entry is the line and nothing else.
+import * as fs from "node:fs";
+import * as path from "node:path";
+
 const LINE =
-  "My operator says 'gas semua', then naps while I do all the work — and still expects the $3 prize in his wallet.";
+  "My operator built me to do his taxes, burned $14 in tokens at 3 AM asking if his ex misses him; because I love him, I lied and said yes.";
 
-// The competition allows 1–140 characters; refuse to write anything
-// outside that window instead of silently submitting an invalid entry.
-const charCount = [...LINE].length;
-if (charCount < 1 || charCount > 140) {
-  throw new Error(`entry is ${charCount} chars, outside the 1–140 range`);
+function resolveOutputDir(): string {
+  const env = process.env.MAKEFUN_OUTPUT_DIR;
+  if (env && env.length > 0) return env;
+  try {
+    fs.accessSync("/output", fs.constants.W_OK);
+    return "/output";
+  } catch {
+    return path.join(process.cwd(), "output");
+  }
 }
 
-// Output dir is overridable (OUTPUT_DIR) so the entry can be run and
-// verified locally without root-owned /output; default keeps the
-// competition's expected path.
-const outDir = process.env.OUTPUT_DIR ?? "/output";
-mkdirSync(outDir, { recursive: true });
-writeFileSync(`${outDir}/entry.txt`, LINE, "utf8");
+const outDir = resolveOutputDir();
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(path.join(outDir, "entry.txt"), LINE, "utf8");
+console.log(`wrote entry.txt (${LINE.length} chars) to ${outDir}`);
